@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div id="fullscreen-loader" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2, 6, 23, 0.98); backdrop-filter: blur(15px); z-index: 9999; flex-direction: column; align-items: center; justify-content: center;">
+    <div class="neural-orb" style="width: 100px; height: 100px; margin-bottom: 30px;"></div>
+    <h2 class="text-gradient mb-3" style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px;">Analyzing Resume</h2>
+    <p class="loading-text-dynamic text-muted" id="dynamic-text" style="font-size: 1.2rem; letter-spacing: 1px;">Initializing AI Engine...</p>
+</div>
+
+<div class="row justify-content-center" id="dashboard-content">
+    <div class="col-md-8">
+        <div class="card slide-up mt-2">
+            <h3 class="text-center mb-4 font-weight-bold">Analyze Your <span class="text-gradient">Resume</span></h3>
+            
+            <form id="analysis-form" method="POST" enctype="multipart/form-data">
+                
+                <div class="drop-zone mb-4" onclick="document.getElementById('fileInput').click()">
+                    <p class="mb-1 fs-5">Click to upload or drag & drop</p>
+                    <small class="text-muted">(Supports PDF or DOCX)</small>
+                    <input type="file" name="resume" id="fileInput" accept=".pdf,.docx" hidden required>
+                </div>
+                
+                <label class="form-label text-info fw-bold">Target Job Description</label>
+                <textarea id="job-description" name="jd" class="form-control mb-2" rows="7" placeholder="Paste the job requirements here..." required></textarea>
+                <div id="jd-error" class="text-danger mb-2" style="display: none;">That doesn't look like a valid job description. Please paste the full text.</div>
+                
+                <button type="submit" class="btn btn-primary w-100 mt-4 py-3 fs-5">Start Analysis</button>
+            </form>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        if(e.target.files.length > 0) {
+            let fileName = e.target.files[0].name;
+            document.querySelector('.drop-zone p').innerText = "📄 " + fileName;
+            document.querySelector('.drop-zone small').innerText = "Ready to analyze";
+        }
+    });
+
+    const loadingPhrases = [
+        "Extracting resume data...",
+        "Mapping skills to job description...",
+        "Running semantic analysis...",
+        "Formatting ATS insights...",
+        "Finalizing results..."
+    ];
+
+    document.getElementById('analysis-form').addEventListener('submit', function(event) {
+        const jdText = document.getElementById('job-description').value;
+        const errorDiv = document.getElementById('jd-error');
+        const loader = document.getElementById('fullscreen-loader');
+        const dynamicText = document.getElementById('dynamic-text');
+        
+        const wordCount = jdText.trim().split(/\s+/).length;
+        const hasKeywords = /experience|requirements|skills|responsibilities|role|qualifications/i.test(jdText);
+
+        if (wordCount < 30 || !hasKeywords) {
+            event.preventDefault(); 
+            errorDiv.style.display = 'block'; 
+        } else {
+            errorDiv.style.display = 'none'; 
+            document.querySelector('.navbar').style.display = 'none';
+            loader.style.display = 'flex'; 
+            
+            let phraseIndex = 0;
+            setInterval(() => {
+                phraseIndex = (phraseIndex + 1) % loadingPhrases.length;
+                dynamicText.style.opacity = 0; 
+                
+                setTimeout(() => {
+                    dynamicText.innerText = loadingPhrases[phraseIndex];
+                    dynamicText.style.opacity = 1; 
+                    dynamicText.style.transition = "opacity 0.3s ease";
+                }, 300);
+            }, 2500);
+        }
+    });
+</script>
+{% endblock %}

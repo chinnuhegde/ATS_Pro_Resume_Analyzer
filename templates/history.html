@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card slide-up mt-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="mb-0 font-weight-bold">Scan <span class="text-gradient">History</span></h3>
+        <a href="/dashboard" class="btn btn-outline-info rounded-pill px-4">&larr; New Scan</a>
+    </div>
+    
+    {% if scans %}
+    <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle">
+            <thead>
+                <tr>
+                    <th scope="col" class="py-3">Date & Time</th>
+                    <th scope="col" class="py-3">Match Score</th>
+                    <th scope="col" class="py-3">AI Feedback Summary</th>
+                    <th scope="col" class="py-3 text-end">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in scans %}
+                <tr>
+                    <td class="text-muted">{{ s.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                    <td>
+                        {% if s.score >= 75 %}
+                            <span class="badge bg-primary fs-6">{{ s.score }}%</span>
+                        {% elif s.score >= 50 %}
+                            <span class="badge bg-warning text-dark fs-6">{{ s.score }}%</span>
+                        {% else %}
+                            <span class="badge bg-danger fs-6">{{ s.score }}%</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-light">{{ s.summary }}...</td>
+                    <td class="text-end">
+                        <a href="/scan/{{ s.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View Report</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <h5 class="text-muted mb-4">You haven't analyzed any resumes yet.</h5>
+        <a href="/dashboard" class="btn btn-primary px-4 py-2">Analyze Your First Resume</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

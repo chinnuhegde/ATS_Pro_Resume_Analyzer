@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS Pro</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3.0">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<nav class="navbar navbar-expand-lg px-4 py-3">
+    <a class="navbar-brand fw-bold text-white fs-4" href="/">ATS <span class="text-gradient">Pro</span></a>
+    
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="ms-auto mt-3 mt-lg-0">
+            {% if current_user.is_authenticated %}
+                <a href="/dashboard" class="btn btn-sm btn-outline-light me-2 border-0">Dashboard</a>
+                <a href="/history" class="btn btn-sm btn-outline-info me-2 border-0">History</a>
+                <a href="/logout" class="btn btn-sm btn-danger rounded-pill px-3">Logout</a>
+            {% else %}
+                <a href="/login" class="btn btn-sm btn-outline-light me-2 border-0">Login</a>
+                <a href="/register" class="btn btn-sm btn-primary rounded-pill px-3">Register</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="container mt-5" style="position: relative; z-index: 10;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} slide-up border-0 flash-message text-center" style="background: rgba(15,23,42,0.8); color: white; backdrop-filter: blur(10px); max-width: 500px; margin: 0 auto 15px auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);" role="alert">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        setTimeout(function() {
+            let alerts = document.querySelectorAll('.flash-message');
+            alerts.forEach(function(alert) {
+                alert.style.transition = "opacity 1s ease, transform 1s ease";
+                alert.style.opacity = "0";
+                alert.style.transform = "translateY(-15px)";
+                setTimeout(function() {
+                    alert.remove();
+                }, 1000); 
+            });
+        }, 3500); 
+    });
+</script>
+
+</body>
+</html>
