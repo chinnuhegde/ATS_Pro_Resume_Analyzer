@@ -1,4 +1,4 @@
-# 🚀 ATS Pro: AI-Powered Resume Analyzer
+# ATS Pro: AI-Powered Resume Analyzer
 
 [![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Flask](https://img.shields.io/badge/Framework-Flask-lightgrey.svg)](https://flask.palletsprojects.com/)
@@ -8,7 +8,7 @@
 
 ---
 
-## 🔥 Core Features
+## Core Features
 
 - **Intelligent Scoring:** Get an instant compatibility score out of 100  
 - **Keyword Analysis:** Automatically identifies missing technical and soft skills  
@@ -19,7 +19,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Backend:** Python, Flask  
 - **Database:** SQLAlchemy (PostgreSQL on Render | SQLite locally)  
@@ -30,7 +30,7 @@
 
 ---
 
-## ⚙️ Local Setup Instructions
+## Local Setup Instructions
 
 ### 1. Clone the Repository
 ```bash
@@ -72,7 +72,7 @@ python app.py
 
 ---
 
-## ☁️ Deployment (Render)
+## Deployment (Render)
 
 - **Build Command:**  
 ```bash
@@ -84,11 +84,11 @@ pip install -r requirements.txt
 gunicorn -w 2 app:app
 ```
 
-> ⚠️ Add all environment variables in Render dashboard
+>  Add all environment variables in Render dashboard
 
 ---
 
-## 🛡️ Security Features
+## Security Features
 
 - No hardcoded secrets (uses `.env`)
 - `.gitignore` prevents credential leaks  
