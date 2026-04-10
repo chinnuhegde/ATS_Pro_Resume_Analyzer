@@ -16,17 +16,20 @@ app = Flask(__name__)
 # Securely load the Flask secret key
 app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 
-# ---------------- DB ----------------
-database_url = os.environ.get('DATABASE_URL', 'sqlite:///ats_users.db')
-if database_url and database_url.startswith("postgres://"):
-    database_url = database_url.replace("postgres://", "postgresql://", 1)
+# ---------------- DATABASE SETUP ----------------
+database_url = os.environ.get('DATABASE_URL')
+
+# This part is critical for Render/Heroku compatibility
+if database_url:
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+else:
+    # Fallback to local sqlite if DATABASE_URL is missing
+    database_url = 'sqlite:///ats_users.db'
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-with app.app_context():
-    db.create_all()
 
 # ---------------- LOGIN ----------------
 login_manager = LoginManager(app)
