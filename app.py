@@ -63,6 +63,10 @@ class Scan(db.Model):
     feedback = db.Column(db.Text) 
     timestamp = db.Column(db.DateTime, default=datetime.now)
 
+with app.app_context():
+    db.create_all()
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
