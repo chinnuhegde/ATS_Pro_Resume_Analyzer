@@ -29,6 +29,14 @@ else:
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# ✅ FIX: Required for Render PostgreSQL SSL
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {
+        "sslmode": "require"
+    }
+}
+
 db = SQLAlchemy(app)
 
 # ---------------- LOGIN ----------------
@@ -181,6 +189,9 @@ def register():
         except Exception as e:
             print(f"Mail Error: {e}")
             flash("Error sending verification email. Check your credentials.", "danger")
+        
+        # ✅ FIX: Ensure flow continues even if mail fails
+        return redirect(url_for('verify'))
             
     return render_template('register.html')
 
