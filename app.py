@@ -202,8 +202,8 @@ def register():
             
             # return redirect(url_for('verify'))
         except Exception as e:
-            print(f"Mail Error: {e}")
-            flash("Error sending verification email. Check your credentials.", "danger")
+            # print(f"Mail Error: {e}")
+            # flash("Error sending verification email. Check your credentials.", "danger")
             ######
             new_user = User(email=request.form['email'], password=hashed_pw)
             db.session.add(new_user)
