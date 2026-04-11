@@ -181,30 +181,38 @@ def register():
 
         hashed_pw = generate_password_hash(request.form['password'], method='pbkdf2:sha256')
         session['reg_data'] = {'email': request.form['email'], 'pw': hashed_pw}
-        otp = str(random.randint(100000, 999999))
-        session['otp'] = otp
+        # otp = str(random.randint(100000, 999999))
+        # session['otp'] = otp
         
         try:
             msg = Message("Verify your ATS Pro Account", sender=app.config['MAIL_USERNAME'], recipients=[request.form['email']])
             msg.body = f"Your verification code is: {otp}"
-            print(f"OTP is: {otp}")
+            # print(f"OTP is: {otp}")
 
             # ✅ ADD: Send OTP via Resend
-            try:
-                resend.Emails.send({
-                "from": "onboarding@resend.dev",
-                "to": request.form['email'],
-                "subject": "Your OTP Code",
-                "html": f"<strong>Your OTP is: {otp}</strong>"
-             })
-            except Exception as e:
-                print(f"Resend Error: {e}")
+            # try:
+            #     resend.Emails.send({
+            #     "from": "onboarding@resend.dev",
+            #     "to": request.form['email'],
+            #     "subject": "Your OTP Code",
+            #     "html": f"<strong>Your OTP is: {otp}</strong>"
+            #  })
+            # except Exception as e:
+            #     print(f"Resend Error: {e}")
             
-            return redirect(url_for('verify'))
+            # return redirect(url_for('verify'))
         except Exception as e:
             print(f"Mail Error: {e}")
             flash("Error sending verification email. Check your credentials.", "danger")
-        
+            ######
+            new_user = User(email=request.form['email'], password=hashed_pw)
+            db.session.add(new_user)
+            db.session.commit()
+            login_user(new_user)
+
+            flash("Registration successful! Welcome to ATS Pro.", "success")
+            return redirect(url_for('dashboard'))
+        ############
         # ✅ FIX: Ensure flow continues even if mail fails
         return redirect(url_for('verify'))
             
