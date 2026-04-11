@@ -7,9 +7,12 @@ from datetime import datetime
 import fitz, docx, random, os, json
 import google.generativeai as genai
 from dotenv import load_dotenv
+import resend
 
 # Load hidden keys from .env file
 load_dotenv()
+
+resend.api_key = os.environ.get("RESEND_API_KEY")
 
 # ---------------- APP ----------------
 app = Flask(__name__)
@@ -185,6 +188,18 @@ def register():
             msg = Message("Verify your ATS Pro Account", sender=app.config['MAIL_USERNAME'], recipients=[request.form['email']])
             msg.body = f"Your verification code is: {otp}"
             print(f"OTP is: {otp}")
+
+            # ✅ ADD: Send OTP via Resend
+            try:
+                resend.Emails.send({
+                "from": "onboarding@resend.dev",
+                "to": request.form['email'],
+                "subject": "Your OTP Code",
+                "html": f"<strong>Your OTP is: {otp}</strong>"
+             })
+            except Exception as e:
+                print(f"Resend Error: {e}")
+            
             return redirect(url_for('verify'))
         except Exception as e:
             print(f"Mail Error: {e}")
