@@ -184,7 +184,7 @@ def register():
         try:
             msg = Message("Verify your ATS Pro Account", sender=app.config['MAIL_USERNAME'], recipients=[request.form['email']])
             msg.body = f"Your verification code is: {otp}"
-            mail.send(msg)
+            print(f"OTP is: {otp}")
             return redirect(url_for('verify'))
         except Exception as e:
             print(f"Mail Error: {e}")
