@@ -1,22 +1,59 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="card fade-in mt-4">
-            <a href="/" class="text-decoration-none text-muted mb-2 fs-6" style="transition: color 0.3s;" onmouseover="this.className='text-decoration-none text-info mb-2 fs-6'" onmouseout="this.className='text-decoration-none text-muted mb-2 fs-6'">&larr; Back to Home</a>
-            
-            <h3 class="text-center mb-4 font-weight-bold">Welcome <span class="text-gradient">Back</span></h3>
-            
-            <form method="POST" autocomplete="off">
-                <input name="email" type="email" class="form-control mb-3 py-2" placeholder="Email Address" required autocomplete="off">
-                <input name="password" type="password" class="form-control mb-4 py-2" placeholder="Password" required autocomplete="new-password">
-                <button class="btn btn-primary w-100 py-2 fs-5">Login</button>
+
+<div class="flex justify-center items-center min-h-[70vh]">
+    <div class="w-full max-w-md">
+
+        <a href="/"
+            class="group flex items-center gap-2 text-slate-500 hover:text-blue-400 transition-colors mb-6 text-sm font-medium">
+            <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+                </path>
+            </svg>
+            Back to Home
+        </a>
+
+        <div
+            class="relative p-8 md:p-10 rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl shadow-2xl">
+
+            <div class="text-center mb-8">
+                <h3 class="text-3xl font-extrabold text-white tracking-tight">
+                    Welcome <span class="text-gradient">Back</span>
+                </h3>
+                <p class="text-slate-400 text-sm mt-2">Enter your credentials to access ATS Pro</p>
+            </div>
+
+            <form method="POST" autocomplete="off" class="space-y-5">
+                <div class="relative">
+                    <input name="email" type="email" required autocomplete="off" placeholder="Email Address"
+                        class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all">
+                </div>
+
+                <div class="relative">
+                    <input name="password" type="password" required autocomplete="new-password" placeholder="Password"
+                        class="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-4 py-3 text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all">
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl text-lg shadow-lg shadow-blue-500/20 transition-all active:scale-[0.98]">
+                    Login
+                </button>
             </form>
-            
-            <div class="text-center mt-4">
-                <p>Don't have an account? <a href="/register" class="text-info text-decoration-none">Create one</a></p>
+
+            <div class="text-center mt-8 pt-6 border-t border-slate-800/50">
+                <p class="text-slate-400 text-sm">
+                    Don't have an account?
+                    <a href="/register" class="text-blue-400 hover:text-blue-300 font-semibold transition-colors">Create
+                        one</a>
+                </p>
+            </div>
+
+            <div
+                class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent">
             </div>
         </div>
     </div>
 </div>
+
 {% endblock %}

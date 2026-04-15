@@ -2,64 +2,142 @@
 {% block content %}
 
 {% if is_history %}
-<div class="mb-3 slide-up">
-    <a href="/history" class="text-decoration-none text-muted mb-2 fs-6" style="transition: color 0.3s;" onmouseover="this.className='text-decoration-none text-info mb-2 fs-6'" onmouseout="this.className='text-decoration-none text-muted mb-2 fs-6'">&larr; Back to History</a>
+<div class="mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <a href="/history"
+        class="group flex items-center gap-2 text-slate-500 hover:text-blue-400 transition-colors text-sm font-medium">
+        <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
+            </path>
+        </svg>
+        Back to History
+    </a>
 </div>
 {% endif %}
 
-<div class="row slide-up">
-    <div class="col-md-4 mb-4">
-        <div class="card text-center h-100">
-            <h4 class="mb-4 font-weight-bold">ATS <span class="text-gradient">Match</span></h4>
-            <div class="score-circle" id="circle">
-                <span id="scoreText">0%</span>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+    <div class="lg:col-span-4 flex flex-col items-center">
+        <div
+            class="w-full p-8 rounded-3xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl shadow-2xl text-center">
+            <h4 class="text-xl font-bold text-white mb-8 tracking-tight">ATS <span class="text-gradient">Match</span>
+            </h4>
+
+            <div class="relative inline-flex items-center justify-center p-2 rounded-full bg-slate-950 shadow-inner">
+                <div id="circle"
+                    class="w-48 h-48 rounded-full flex items-center justify-center relative transition-all duration-500 ease-out"
+                    style="background: conic-gradient(#3b82f6 0%, #1e293b 0%);">
+                    <div
+                        class="absolute inset-4 bg-slate-900 rounded-full shadow-xl flex flex-col items-center justify-center">
+                        <span id="scoreText" class="text-5xl font-black text-white tracking-tighter">0%</span>
+                        <span
+                            class="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Accuracy</span>
+                    </div>
+                </div>
             </div>
-            <p class="mt-4 text-muted">Based on semantic keyword matching and context analysis.</p>
+
+            <p class="mt-8 text-sm text-slate-400 leading-relaxed">
+                Based on semantic keyword matching and context analysis of your profile against the role.
+            </p>
         </div>
     </div>
-    
-    <div class="col-md-8">
+
+    <div class="lg:col-span-8 space-y-6">
         {% if current_user.is_authenticated %}
-            <div class="card mb-3">
-                <h5 class="mb-3">Missing Key Skills</h5>
-                <div>
-                    {% if data.missing %}
-                        {% for m in data.missing %}
-                            <span class="badge bg-danger p-2 m-1">{{ m|title }}</span>
-                        {% endfor %}
-                    {% else %}
-                        <span class="badge bg-success p-2">Excellent! All core technical skills found.</span>
-                    {% endif %}
+
+        <div class="p-6 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md">
+            <h5 class="text-sm font-bold text-red-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                    </path>
+                </svg>
+                Missing Key Skills
+            </h5>
+            <div class="flex flex-wrap gap-2">
+                {% if data.missing %}
+                {% for m in data.missing %}
+                <span
+                    class="px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-semibold">
+                    {{ m|title }}
+                </span>
+                {% endfor %}
+                {% else %}
+                <div
+                    class="w-full p-4 rounded-xl bg-green-500/5 border border-green-500/20 text-green-400 text-sm font-medium">
+                    ✨ Excellent! All core technical skills found in your resume.
                 </div>
+                {% endif %}
             </div>
+        </div>
 
-            <div class="card mb-3">
-                <h5 class="mb-3">Actionable Insights</h5>
-                <ul class="mb-0">
-                    {% for s in data.suggestions %}
-                        <li class="mb-2">{{ s }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
+        <div class="p-6 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-md">
+            <h5 class="text-sm font-bold text-blue-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                Actionable Insights
+            </h5>
+            <ul class="space-y-3">
+                {% for s in data.suggestions %}
+                <li class="flex items-start gap-3 text-slate-300 text-sm leading-relaxed">
+                    <span class="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+                    {{ s }}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
 
-            <div class="card">
-                <h5 class="mb-3">Feedback</h5>
-                <ul class="mb-0 text-white">
-                    {% for point in data.feedback %}
-                        <li class="mb-2">{{ point }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        
+        <div class="p-6 rounded-2xl border border-slate-800 bg-slate-950/40">
+            <h5 class="text-sm font-bold text-purple-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z">
+                    </path>
+                </svg>
+                AI Performance Feedback
+            </h5>
+            <ul class="space-y-4">
+                {% for point in data.feedback %}
+                <li class="p-3 rounded-xl bg-slate-900/50 border border-slate-800 text-slate-300 text-sm italic">
+                    "{{ point }}"
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
         {% else %}
-            <div class="card h-100 d-flex flex-column justify-content-center align-items-center text-center p-5 border-info" style="border-width: 2px; border-style: dashed;">
-                <h3 class="mb-3 font-weight-bold">Unlock Detailed <span class="text-gradient">Insights</span></h3>
-                <p class="text-muted mb-4 fs-5">You've seen your score! Log in to reveal exactly which skills you are missing, formatting fixes, and personalized AI feedback.</p>
-                <div>
-                    <a href="/login" class="btn btn-primary px-4 py-2 me-3 fs-5">Login</a>
-                    <a href="/register" class="btn btn-outline-info px-4 py-2 fs-5">Create Account</a>
-                </div>
+        <div
+            class="relative p-10 md:p-16 rounded-3xl border-2 border-dashed border-blue-500/30 bg-blue-500/[0.02] backdrop-blur-md flex flex-col items-center text-center overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/10 blur-3xl rounded-full"></div>
+
+            <div class="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center text-blue-400 mb-6">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 00-2 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                    </path>
+                </svg>
             </div>
+
+            <h3 class="text-3xl font-black text-white mb-4 tracking-tighter">Unlock Detailed <span
+                    class="text-gradient">Insights</span></h3>
+            <p class="text-slate-400 mb-8 max-w-md text-base leading-relaxed">
+                You've seen your score! Create an account to reveal missing skills, specific formatting fixes, and
+                detailed AI-generated feedback.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <a href="/login"
+                    class="px-10 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl transition-all shadow-lg shadow-blue-500/20 active:scale-95">
+                    Login
+                </a>
+                <a href="/register"
+                    class="px-10 py-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl border border-slate-700 transition-all active:scale-95">
+                    Create Account
+                </a>
+            </div>
+        </div>
         {% endif %}
     </div>
 </div>
@@ -67,17 +145,18 @@
 <script>
     let targetScore = {{ data.score }};
     let currentScore = 0;
-    
+
     let timer = setInterval(() => {
-        if(currentScore >= targetScore) {
+        if (currentScore >= targetScore) {
             clearInterval(timer);
         } else {
             currentScore++;
             document.getElementById('scoreText').innerText = currentScore + "%";
-            
-            let color = currentScore < 50 ? '#ef4444' : (currentScore < 75 ? '#eab308' : '#3b82f6');
+
+            // Modern palette: Red (Danger), Yellow (Warning), Blue (Primary)
+            let color = currentScore < 50 ? '#ef4444' : (currentScore < 75 ? '#f59e0b' : '#3b82f6');
             document.getElementById('circle').style.background = `conic-gradient(${color} ${currentScore}%, #1e293b 0%)`;
         }
-    }, 15);
+    }, 20);
 </script>
 {% endblock %}

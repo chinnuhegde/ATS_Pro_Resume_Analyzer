@@ -1,72 +1,132 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-slate-950 text-slate-50">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ATS Pro</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3.0">
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
-    
+
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <style type="text/css">
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom Animated Orbs using Tailwind-friendly CSS */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: float 10s infinite alternate ease-in-out;
+        }
+
+        @keyframes float {
+            from {
+                transform: translate(0, 0);
+            }
+
+            to {
+                transform: translate(20px, 40px);
+            }
+        }
+
+        .text-gradient {
+            background: linear-gradient(to right, #60a5fa, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
 </head>
-<body>
 
-<div class="orb orb-1"></div>
-<div class="orb orb-2"></div>
+<body class="min-h-screen selection:bg-blue-500/30">
 
-<nav class="navbar navbar-expand-lg px-4 py-3">
-    <a class="navbar-brand fw-bold text-white fs-4" href="/">ATS <span class="text-gradient">Pro</span></a>
-    
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-    </button>
+    <div class="orb orb-1 bg-blue-600 w-72 h-72 -top-20 -left-20"></div>
+    <div class="orb orb-2 bg-purple-600 w-96 h-96 bottom-0 -right-20" style="animation-delay: -5s;"></div>
 
-    <div class="collapse navbar-collapse" id="navbarNav">
-        <div class="ms-auto mt-3 mt-lg-0">
+    <nav class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/70 border-b border-slate-800 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <a class="text-2xl font-extrabold tracking-tight text-white" href="/">
+                ATS <span class="text-gradient">Pro</span>
+            </a>
+
+            <div class="hidden md:flex items-center gap-6">
+                {% if current_user.is_authenticated %}
+                <a href="/dashboard"
+                    class="text-sm font-semibold text-slate-300 hover:text-white transition">Dashboard</a>
+                <a href="/history" class="text-sm font-semibold text-slate-300 hover:text-white transition">History</a>
+                <a href="/logout"
+                    class="bg-red-500/10 text-red-400 hover:bg-red-500 hover:text-white px-5 py-2 rounded-full text-sm font-bold transition-all border border-red-500/20">
+                    Logout
+                </a>
+                {% else %}
+                <a href="/login" class="text-sm font-semibold text-slate-300 hover:text-white transition">Login</a>
+                <a href="/register"
+                    class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-full text-sm font-bold transition-all shadow-lg shadow-blue-500/20">
+                    Register
+                </a>
+                {% endif %}
+            </div>
+
+            <button class="md:hidden text-slate-300 focus:outline-none"
+                onclick="document.getElementById('mobile-menu').classList.toggle('hidden')">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden mt-4 flex flex-col gap-4 pb-4">
             {% if current_user.is_authenticated %}
-                <a href="/dashboard" class="btn btn-sm btn-outline-light me-2 border-0">Dashboard</a>
-                <a href="/history" class="btn btn-sm btn-outline-info me-2 border-0">History</a>
-                <a href="/logout" class="btn btn-sm btn-danger rounded-pill px-3">Logout</a>
+            <a href="/dashboard" class="block text-slate-300">Dashboard</a>
+            <a href="/history" class="block text-slate-300">History</a>
+            <a href="/logout" class="text-red-400">Logout</a>
             {% else %}
-                <a href="/login" class="btn btn-sm btn-outline-light me-2 border-0">Login</a>
-                <a href="/register" class="btn btn-sm btn-primary rounded-pill px-3">Register</a>
+            <a href="/login" class="block text-slate-300">Login</a>
+            <a href="/register" class="text-blue-400">Register</a>
             {% endif %}
         </div>
-    </div>
-</nav>
+    </nav>
 
-<div class="container mt-5" style="position: relative; z-index: 10;">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-{{ category }} slide-up border-0 flash-message text-center" style="background: rgba(15,23,42,0.8); color: white; backdrop-filter: blur(10px); max-width: 500px; margin: 0 auto 15px auto; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);" role="alert">
-            {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-    
-    {% block content %}{% endblock %}
-</div>
+    <main class="container mx-auto px-4 mt-12 relative z-10">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+        <div class="max-w-md mx-auto">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-message mb-4 p-4 rounded-2xl border border-slate-700 bg-slate-900/80 backdrop-blur-xl text-center shadow-2xl transition-all duration-700"
+                role="alert">
+                <span
+                    class="text-sm font-medium {% if category == 'danger' %}text-red-400{% else %}text-blue-400{% endif %}">
+                    {{ message }}
+                </span>
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        setTimeout(function() {
-            let alerts = document.querySelectorAll('.flash-message');
-            alerts.forEach(function(alert) {
-                alert.style.transition = "opacity 1s ease, transform 1s ease";
-                alert.style.opacity = "0";
-                alert.style.transform = "translateY(-15px)";
-                setTimeout(function() {
-                    alert.remove();
-                }, 1000); 
-            });
-        }, 3500); 
-    });
-</script>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.flash-message');
+                alerts.forEach(alert => {
+                    alert.style.opacity = "0";
+                    alert.style.transform = "translateY(-10px)";
+                    setTimeout(() => alert.remove(), 700);
+                });
+            }, 3500);
+        });
+    </script>
 
 </body>
+
 </html>

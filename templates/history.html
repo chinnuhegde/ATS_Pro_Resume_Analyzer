@@ -1,49 +1,100 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="card slide-up mt-2">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="mb-0 font-weight-bold">Scan <span class="text-gradient">History</span></h3>
-        <a href="/dashboard" class="btn btn-outline-info rounded-pill px-4">&larr; New Scan</a>
+
+<div class="max-w-5xl mx-auto px-4">
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+        <div>
+            <h3 class="text-3xl font-extrabold text-white tracking-tight">
+                Scan <span class="text-gradient">History</span>
+            </h3>
+            <p class="text-slate-500 text-sm mt-1">Review your past resume performance and AI insights</p>
+        </div>
+        <a href="/dashboard"
+            class="flex items-center gap-2 bg-slate-800/50 hover:bg-slate-700 text-blue-400 hover:text-white border border-slate-700 px-6 py-2.5 rounded-full text-sm font-bold transition-all group">
+            <span class="transform group-hover:-translate-x-1 transition-transform">&larr;</span> New Scan
+        </a>
     </div>
-    
+
     {% if scans %}
-    <div class="table-responsive">
-        <table class="table table-dark table-hover align-middle">
-            <thead>
-                <tr>
-                    <th scope="col" class="py-3">Date & Time</th>
-                    <th scope="col" class="py-3">Match Score</th>
-                    <th scope="col" class="py-3">AI Feedback Summary</th>
-                    <th scope="col" class="py-3 text-end">Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in scans %}
-                <tr>
-                    <td class="text-muted">{{ s.timestamp.strftime('%Y-%m-%d %I:%M %p') }}</td>
-                    <td>
-                        {% if s.score >= 75 %}
-                            <span class="badge bg-primary fs-6">{{ s.score }}%</span>
-                        {% elif s.score >= 50 %}
-                            <span class="badge bg-warning text-dark fs-6">{{ s.score }}%</span>
-                        {% else %}
-                            <span class="badge bg-danger fs-6">{{ s.score }}%</span>
-                        {% endif %}
-                    </td>
-                    <td class="text-light">{{ s.summary }}...</td>
-                    <td class="text-end">
-                        <a href="/scan/{{ s.id }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">View Report</a>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="rounded-3xl border border-slate-800 bg-slate-900/40 backdrop-blur-md shadow-2xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-950/40 border-b border-slate-800">
+                        <th class="px-6 py-5 text-xs font-bold uppercase tracking-widest text-slate-500">Date & Time
+                        </th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase tracking-widest text-slate-500">Match Score
+                        </th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase tracking-widest text-slate-500">AI Feedback
+                            Summary</th>
+                        <th class="px-6 py-5 text-xs font-bold uppercase tracking-widest text-slate-500 text-right">
+                            Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/50">
+                    {% for s in scans %}
+                    <tr class="hover:bg-blue-500/5 transition-colors group">
+                        <td class="px-6 py-5 whitespace-nowrap">
+                            <span class="text-slate-300 font-medium block">{{ s.timestamp.strftime('%Y-%m-%d') }}</span>
+                            <span class="text-slate-500 text-xs">{{ s.timestamp.strftime('%I:%M %p') }}</span>
+                        </td>
+                        <td class="px-6 py-5">
+                            {% if s.score >= 75 %}
+                            <div
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-500/10 text-green-400 border border-green-500/20 shadow-[0_0_15px_rgba(74,222,128,0.1)]">
+                                {{ s.score }}% High Match
+                            </div>
+                            {% elif s.score >= 50 %}
+                            <div
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
+                                {{ s.score }}% Average
+                            </div>
+                            {% else %}
+                            <div
+                                class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                                {{ s.score }}% Low Match
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-5 max-w-xs md:max-w-md">
+                            <p class="text-slate-400 text-sm line-clamp-1 group-hover:text-slate-200 transition-colors">
+                                {{ s.summary }}...
+                            </p>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            <a href="/scan/{{ s.id }}"
+                                class="inline-flex items-center gap-2 bg-blue-600/10 hover:bg-blue-600 text-blue-400 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-blue-500/20">
+                                View Report
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
     {% else %}
-    <div class="text-center py-5">
-        <h5 class="text-muted mb-4">You haven't analyzed any resumes yet.</h5>
-        <a href="/dashboard" class="btn btn-primary px-4 py-2">Analyze Your First Resume</a>
+    <div class="text-center py-20 px-6 rounded-3xl border border-slate-800 border-dashed bg-slate-900/20">
+        <div class="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-10 h-10 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                </path>
+            </svg>
+        </div>
+        <h5 class="text-xl font-bold text-white mb-2">No analysis history found</h5>
+        <p class="text-slate-500 mb-8 max-w-sm mx-auto">You haven't analyzed any resumes yet. Start optimizing your
+            career today!</p>
+        <a href="/dashboard"
+            class="inline-flex items-center px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/20 transition-all">
+            Analyze Your First Resume
+        </a>
     </div>
     {% endif %}
 </div>
+
 {% endblock %}
