@@ -1,66 +1,32 @@
+import os
+import json
+import fitz, docx
+from datetime import datetime
 from flask import Flask, render_template, request, redirect, session, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin, current_user
-from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
-import fitz, docx, random, os, json
-import google.generativeai as genai
 from dotenv import load_dotenv
-import resend
 
-# Load hidden keys from .env file
 load_dotenv()
 
-resend.api_key = os.environ.get("RESEND_API_KEY")
-
-# ---------------- APP ----------------
 app = Flask(__name__)
-# Securely load the Flask secret key
-app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")
 
-# ---------------- DATABASE SETUP ----------------
-database_url = os.environ.get('DATABASE_URL')
-
-# This part is critical for Render/Heroku compatibility
-if database_url:
-    if database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-else:
-    # Fallback to local sqlite if DATABASE_URL is missing
-    database_url = 'sqlite:///ats_users.db'
+# --- DATABASE SETUP ---
+database_url = os.environ.get('DATABASE_URL', 'sqlite:///ats_users.db')
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# ✅ FIX: Required for Render PostgreSQL SSL
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "connect_args": {
-        "sslmode": "require"
-    }
-}
-
 db = SQLAlchemy(app)
 
-# ---------------- LOGIN ----------------
+# --- LOGIN SETUP ---
 login_manager = LoginManager(app)
 login_manager.login_view = "login"
 
-# ---------------- MAIL ----------------
-app.config.update(
-    MAIL_SERVER='smtp.gmail.com',
-    MAIL_PORT=587,
-    MAIL_USE_TLS=True,
-    MAIL_USERNAME=os.environ.get('MAIL_USERNAME'),
-    MAIL_PASSWORD=os.environ.get('MAIL_PASSWORD')
-)
-mail = Mail(app)
-
-# ---------------- GEMINI AI SETUP ----------------
-genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
-model = genai.GenerativeModel('gemini-2.5-flash')
-
-# ---------------- MODELS ----------------
+# --- MODELS ---
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), unique=True, nullable=False)
@@ -74,15 +40,11 @@ class Scan(db.Model):
     feedback = db.Column(db.Text) 
     timestamp = db.Column(db.DateTime, default=datetime.now)
 
-with app.app_context():
-    db.create_all()
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# ---------------- UTILITIES ----------------
+# --- UTILS ---
 def extract_text(file):
     content = ""
     try:
@@ -93,159 +55,57 @@ def extract_text(file):
             doc = docx.Document(file)
             content = "\n".join([p.text for p in doc.paragraphs])
     except Exception as e:
-        print(f"File Extraction Error: {e}")
+        print(f"Extraction Error: {e}")
     return content
 
-def get_gemini_analysis(resume_text, jd_text):
-    prompt = f"""
-    You are an expert Applicant Tracking System (ATS) and Senior Technical Recruiter.
-    Analyze the following Resume against the provided Job Description.
-    
-    Return ONLY a valid JSON object. Do NOT include markdown formatting like ```json.
-    Strictly limit suggestions to 3 points and feedback to 3 concise sentences.
-    
-    The JSON must have this exact structure:
-    {{
-        "score": 85.5,
-        "missing": ["aws", "docker"],
-        "suggestions": ["Add more metrics", "Highlight leadership", "Quantify results"],
-        "feedback": [
-            "Strong candidate with solid technical fundamentals.",
-            "Lacks direct experience with cloud deployment.",
-            "Education matches the job requirements perfectly."
-        ]
-    }}
-
-    Job Description:
-    {jd_text}
-    
-    Resume:
-    {resume_text}
-    """
-    try:
-        response = model.generate_content(
-            prompt,
-            generation_config=genai.GenerationConfig(
-                response_mime_type="application/json",
-                temperature=0.2 
-            )
-        )
-        raw_text = response.text.strip()
-        
-        if raw_text.startswith("```json"):
-            raw_text = raw_text.replace("```json", "", 1)
-        if raw_text.startswith("```"):
-            raw_text = raw_text.replace("```", "", 1)
-        if raw_text.endswith("```"):
-            raw_text = raw_text[::-1].replace("```"[::-1], "", 1)[::-1]
-            
-        raw_text = raw_text.strip()
-        analysis_data = json.loads(raw_text)
-        
-        return (
-            float(analysis_data.get('score', 0)),
-            analysis_data.get('missing', []),
-            analysis_data.get('suggestions', []),
-            analysis_data.get('feedback', ["Analysis complete."])
-        )
-    except Exception as e:
-        error_message = str(e).lower()
-        print(f"CRITICAL GEMINI ERROR: {error_message}")
-        
-        if "429" in error_message or "quota" in error_message or "exhausted" in error_message:
-            return (
-                0.0,
-                ["API Limit Reached"],
-                ["Please wait a minute and try your scan again.", "Our free AI engine is currently handling maximum traffic."],
-                ["We apologize! We are currently experiencing high traffic and have temporarily hit the limit of our free AI processing tier. Please give it a few moments and try analyzing your resume again."]
-            )
-        else:
-            return (
-                0.0,
-                ["Processing Error"],
-                ["Check if your resume text is easily readable.", "Try uploading a different PDF/DOCX format."],
-                ["We encountered an unexpected error while reading your resume or job description. Please check your files and try again."]
-            )
-
-# ---------------- ROUTES ----------------
+# --- ROUTES ---
 @app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/register', methods=['GET','POST'])
-def register():
+@app.route('/dashboard', methods=['GET','POST'])
+def dashboard():
     if request.method == 'POST':
-        if User.query.filter_by(email=request.form['email']).first():
-            flash("Email already registered.", "warning")
-            return redirect(url_for('login'))
-
-        hashed_pw = generate_password_hash(request.form['password'], method='pbkdf2:sha256')
-        session['reg_data'] = {'email': request.form['email'], 'pw': hashed_pw}
-        # otp = str(random.randint(100000, 999999))
-        # session['otp'] = otp
+        # 1. Input Check
+        if 'resume' not in request.files or not request.form.get('jd'):
+            flash("Upload a resume and paste a JD.", "danger")
+            return redirect(request.url)
+            
+        file = request.files['resume']
+        jd_text = request.form['jd']
+        resume_text = extract_text(file)
         
-        try:
-            msg = Message("Verify your ATS Pro Account", sender=app.config['MAIL_USERNAME'], recipients=[request.form['email']])
-            msg.body = f"Your verification code is: {otp}"
-            # print(f"OTP is: {otp}")
+        if not resume_text.strip():
+            flash("Could not read file.", "danger")
+            return redirect(request.url)
 
-            # ✅ ADD: Send OTP via Resend
-            # try:
-            #     resend.Emails.send({
-            #     "from": "onboarding@resend.dev",
-            #     "to": request.form['email'],
-            #     "subject": "Your OTP Code",
-            #     "html": f"<strong>Your OTP is: {otp}</strong>"
-            #  })
-            # except Exception as e:
-            #     print(f"Resend Error: {e}")
-            
-            # return redirect(url_for('verify'))
-        except Exception as e:
-            # print(f"Mail Error: {e}")
-            # flash("Error sending verification email. Check your credentials.", "danger")
-            ######
-            new_user = User(email=request.form['email'], password=hashed_pw)
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user)
+        # 2. LOCAL IMPORT (Solves 404 issues)
+        from rag_pipeline import ask_rag
+        
+        # 3. Call RAG
+        rag_data = ask_rag(resume_text, jd_text)
 
-            flash("Registration successful! Welcome to ATS Pro.", "success")
-            return redirect(url_for('dashboard'))
-        ############
-        # ✅ FIX: Ensure flow continues even if mail fails
-        return redirect(url_for('verify'))
+        if rag_data:
+            score = float(rag_data.get('score', 0))
+            missing = rag_data.get('missing_skills', [])
+            suggestions = rag_data.get('suggestions', [])
+            feedback_list = [rag_data.get('analysis', "Analysis complete.")]
             
-    return render_template('register.html')
+            session['result'] = {
+                'score': score, 'missing': missing, 
+                'suggestions': suggestions, 'feedback': feedback_list
+            }
 
-@app.route('/verify', methods=['GET','POST'])
-def verify():
-    if request.method == 'POST':
-        if request.form['otp'] == session.get('otp'):
-            data = session.get('reg_data')
-            new_user = User(email=data['email'], password=data['pw'])
-            db.session.add(new_user)
-            db.session.commit()
-            login_user(new_user)
-            
-            if 'result' in session:
-                res = session['result']
-                full_data = json.dumps({
-                    'missing': res.get('missing', []),
-                    'suggestions': res.get('suggestions', []),
-                    'feedback': res.get('feedback', [])
-                })
-                new_scan = Scan(user_id=new_user.id, score=res['score'], feedback=full_data)
-                db.session.add(new_scan)
+            if current_user.is_authenticated:
+                full_json = json.dumps({'missing': missing, 'suggestions': suggestions, 'feedback': feedback_list})
+                db.session.add(Scan(user_id=current_user.id, score=score, feedback=full_json))
                 db.session.commit()
-                flash("Registration successful! We saved your scan and unlocked your detailed insights.", "success")
-                return redirect(url_for('result'))
             
-            flash("Registration successful! Welcome to ATS Pro.", "success")
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('result'))
+        else:
+            flash("AI analysis failed. Check your API key.", "warning")
             
-        flash("Invalid OTP. Please try again.", "danger")
-    return render_template('verify.html')
+    return render_template('dashboard.html')
 
 @app.route('/login', methods=['GET','POST'])
 def login():
@@ -253,65 +113,25 @@ def login():
         user = User.query.filter_by(email=request.form['email']).first()
         if user and check_password_hash(user.password, request.form['password']):
             login_user(user)
-            
-            if 'result' in session:
-                res = session['result']
-                full_data = json.dumps({
-                    'missing': res.get('missing', []),
-                    'suggestions': res.get('suggestions', []),
-                    'feedback': res.get('feedback', [])
-                })
-                new_scan = Scan(user_id=user.id, score=res['score'], feedback=full_data)
-                db.session.add(new_scan)
-                db.session.commit()
-                flash("Welcome back! We saved your scan and unlocked your detailed insights.", "success")
-                return redirect(url_for('result'))
-            
             return redirect(url_for('dashboard'))
-            
-        flash("Invalid credentials. Please check your email and password.", "danger")
+        flash("Login failed.", "danger")
     return render_template('login.html')
 
-@app.route('/dashboard', methods=['GET','POST'])
-def dashboard():
+@app.route('/register', methods=['GET','POST'])
+def register():
     if request.method == 'POST':
-        if 'resume' not in request.files:
-            flash("No file uploaded", "danger")
-            return redirect(request.url)
-            
-        file = request.files['resume']
-        jd = request.form['jd']
+        email = request.form['email']
+        if User.query.filter_by(email=email).first():
+            flash("Email exists.", "warning")
+            return redirect(url_for('login'))
         
-        if file.filename == '':
-            flash("No selected file", "danger")
-            return redirect(request.url)
-
-        text = extract_text(file)
-        if not text.strip():
-            flash("Could not extract text. Make sure it's a valid PDF/DOCX.", "danger")
-            return redirect(request.url)
-        
-        score, missing, suggestions, feedback_list = get_gemini_analysis(text, jd)
-        session['result'] = {
-            'score': score, 
-            'missing': missing, 
-            'suggestions': suggestions, 
-            'feedback': feedback_list
-        }
-        
-        if current_user.is_authenticated:
-            full_data = json.dumps({
-                'missing': missing,
-                'suggestions': suggestions,
-                'feedback': feedback_list
-            })
-            new_scan = Scan(user_id=current_user.id, score=score, feedback=full_data)
-            db.session.add(new_scan)
-            db.session.commit()
-        
-        return redirect(url_for('result'))
-        
-    return render_template('dashboard.html')
+        hashed_pw = generate_password_hash(request.form['password'], method='pbkdf2:sha256')
+        new_user = User(email=email, password=hashed_pw)
+        db.session.add(new_user)
+        db.session.commit()
+        login_user(new_user)
+        return redirect(url_for('dashboard'))
+    return render_template('register.html')
 
 @app.route('/result')
 def result():
@@ -333,6 +153,7 @@ def view_scan(scan_id):
             'feedback': data.get('feedback', [])
         }
     except json.JSONDecodeError:
+        # Fallback for old database entries before the JSON upgrade
         result_data = {
             'score': scan.score,
             'missing': [],
@@ -351,9 +172,10 @@ def history():
     for s in scans:
         try:
             data = json.loads(s.feedback)
-            summary = data.get('feedback', [''])[0][:85]
+            # Grab the first sentence of the analysis for the summary preview
+            summary = data.get('feedback', [''])[0][:85] + "..."
         except json.JSONDecodeError:
-            summary = s.feedback[:85]
+            summary = s.feedback[:85] + "..."
             
         parsed_scans.append({
             'id': s.id,
@@ -369,9 +191,9 @@ def history():
 def logout():
     session.pop('result', None)
     logout_user()
-    flash("You have been logged out.", "info")
     return redirect(url_for('home'))
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port,debug=True)
+    with app.app_context():
+        db.create_all()
+    app.run(host="0.0.0.0", port=10000, debug=True)
