@@ -44,6 +44,9 @@ class Scan(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+with app.app_context():
+    db.create_all()
+
 # --- UTILS ---
 def extract_text(file):
     content = ""
