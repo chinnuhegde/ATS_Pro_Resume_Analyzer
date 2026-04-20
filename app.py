@@ -67,12 +67,17 @@ def home():
 def dashboard():
     if request.method == 'POST':
         # 1. Input Check
-        if 'resume' not in request.files or not request.form.get('jd'):
-            flash("Upload a resume and paste a JD.", "danger")
+        if 'resume' not in request.files:
+            flash("Upload a resume.", "danger")
             return redirect(request.url)
             
         file = request.files['resume']
-        jd_text = request.form['jd']
+        
+        # Handle the optional JD requirement for public users
+        jd_text = request.form.get('jd', 'General Resume Scan')
+        if not jd_text or not jd_text.strip():
+            jd_text = 'General Resume Scan'
+            
         resume_text = extract_text(file)
         
         if not resume_text.strip():
@@ -87,21 +92,30 @@ def dashboard():
 
         if rag_data:
             score = float(rag_data.get('score', 0))
-            missing = rag_data.get('missing_skills', [])
-            suggestions = rag_data.get('suggestions', [])
-            feedback_list = [rag_data.get('analysis', "Analysis complete.")]
             
-            session['result'] = {
-                'score': score, 'missing': missing, 
-                'suggestions': suggestions, 'feedback': feedback_list
-            }
-
             if current_user.is_authenticated:
+                # Logged in: Extract full data, save to DB, and use DB ID for redirect
+                missing = rag_data.get('missing_skills', [])
+                suggestions = rag_data.get('suggestions', [])
+                feedback_list = [rag_data.get('analysis', "Analysis complete.")]
+                
                 full_json = json.dumps({'missing': missing, 'suggestions': suggestions, 'feedback': feedback_list})
-                db.session.add(Scan(user_id=current_user.id, score=score, feedback=full_json))
+                new_scan = Scan(user_id=current_user.id, score=score, feedback=full_json)
+                db.session.add(new_scan)
                 db.session.commit()
-            
-            return redirect(url_for('result'))
+                
+                # Bypass the 4KB session limit entirely by loading directly from the database
+                return redirect(url_for('view_scan', scan_id=new_scan.id))
+            else:
+                # Public User: Keep payload tiny (< 1KB) to pass the cookie limit
+                # Restricts actionable insights to logged-in users
+                session['result'] = {
+                    'score': score, 
+                    'missing': ["Please log in or sign up to view missing skills."], 
+                    'suggestions': ["Actionable insights are restricted to registered users."], 
+                    'feedback': ["Detailed AI feedback requires an account."]
+                }
+                return redirect(url_for('result'))
         else:
             flash("AI analysis failed. Check your API key.", "warning")
             
